@@ -321,8 +321,22 @@
           })
         });
         const result = await res.json();
-        alert(`✅ 成功提交！你答對了 ${result.correctCount} / ${result.total} 題`);
-        window.location.href = `/videotest/result.html?videoId=${videoId}&userId=123&attemptId=${attemptId}`;
+
+     // ✅ 儲存作答結果供 result.html 顯示經驗值用
+        
+
+     // ✅ 儲存作答結果供 result.html 顯示經驗值用
+     localStorage.setItem("quizResult", JSON.stringify({
+       correctCount: result.correctCount,
+       total: result.total,
+       gainedExp: result.correctCount * 10
+     }));
+
+     alert(`✅ 成功提交！你答對了 ${result.correctCount} / ${result.total} 題`);
+
+     // ✅ 只需要這一行
+     window.location.href = `/videotest/result.html?videoId=${videoId}&userId=123&attemptId=${attemptId}`;
+
       } catch (err) {
         alert('❌ 提交失敗');
         console.error(err);

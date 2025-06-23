@@ -418,20 +418,21 @@ details.question-block {
           innerSummary.textContent = `第 ${attemptIndex + 1} 次測驗（${formattedTime}）`;
           attemptBlock.appendChild(innerSummary);
 
-          let localIndex = 1;
           visibleAnswers.forEach(qa => {
-            const selected = qa.selectedIndex ?? qa.selected_option;
-            const isCorrect = selected === qa.correctIndex;
+        	  const selected = qa.selectedIndex ?? qa.selected_option;
+        	  const isCorrect = selected === qa.correctIndex;
 
-            const qDiv = document.createElement('div');
-            qDiv.className = 'question';
-            qDiv.innerHTML = `
-              <div class="question-title">
-                <span>${isCorrect ? '⭕' : '❌'}</span>
-                <span>Q${localIndex++}.</span>
-                ${qa.question}
-                <span class="badge ${qa.difficulty}">${qa.difficulty}</span>
-              </div>`;
+        	  const qDiv = document.createElement('div');
+        	  qDiv.className = 'question';
+        	  qDiv.innerHTML = `
+        	    <div class="question-title">
+        	      <span>${isCorrect ? '⭕' : '❌'}</span>
+        	      <span>Q${(qa.originalIndex ?? 0) + 1}.</span>
+        	      ${qa.question}
+        	      <span class="badge ${qa.difficulty}">${qa.difficulty}</span>
+        	    </div>`;
+
+               
 
             const options = qa.options ? (Array.isArray(qa.options) ? qa.options : Object.values(qa.options)) :
               [qa.option1, qa.option2, qa.option3, qa.option4];

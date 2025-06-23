@@ -55,7 +55,8 @@ public class QuizHistoryDetailController {
                         userId, videoId, result.getAttemptId());
 
                 JsonArray answerArr = new JsonArray();
-                for (Answer a : answers) {
+                for (int i = 0; i < answers.size(); i++) {
+                    Answer a = answers.get(i);
                     JsonObject ans = new JsonObject();
                     ans.addProperty("question", a.getQuestion());
                     ans.addProperty("selectedAnswer", a.getOptionTextByIndex(a.getSelectedOption()));
@@ -69,6 +70,7 @@ public class QuizHistoryDetailController {
                     ans.addProperty("correctIndex", a.getAnswerIndex());
                     ans.addProperty("selectedIndex", a.getSelectedOption());
                     ans.addProperty("difficulty", a.getDifficulty());
+                    ans.addProperty("originalIndex", i); // ✅ 題目原始順序
                     answerArr.add(ans);
                 }
 
