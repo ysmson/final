@@ -573,36 +573,8 @@ body {
 	pointer-events: none;
 }
 
-.start-quiz-btn {
-	font-family: var(--body-font, Inter, "Noto Sans SC", "Noto Sans TC",
-		Arimo, Verdana, Geneva, sans-serif);
-	font-size: 1.02rem;
-	font-weight: 600;
-	min-width: 9.5em;
-	min-height: 2.3em;
-	letter-spacing: 0.01em;
-	border: none;
-	background: #2c2c2d;
-	color: #c3c3c3;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13), 0 1.5px 4px
-		rgba(0, 0, 0, 0.10);
-	cursor: pointer;
-	transition: background 0.2s cubic-bezier(.4, .09, .35, 1), color 0.2s,
-		box-shadow .18s cubic-bezier(.4, .09, .35, 1);
-	user-select: none;
-	position: absolute;
-	bottom: -80px;
-	right: 16px;
-	z-index: 10;
-	display: flex;
-	line-height: 1;
-	justify-content: center;
-	align-items: center;
-	height: 2rem;
-	text-decoration: none;
-	padding: 0 0.25rem;
-	margin: 0;
-}
+
+
 
 .start-quiz-btn:hover, .start-quiz-btn:focus-visible {
 	outline: none;
@@ -727,6 +699,30 @@ body {
 #overlay button#load-video:hover {
 	background: #3e3e42;
 }
+.start-quiz-btn {
+  font-family: var(--body-font, Inter, "Noto Sans SC", "Noto Sans TC", Arimo, Verdana, Geneva, sans-serif);
+  font-size: 1.02rem;
+  font-weight: 600;
+  min-width: 9.5em;
+  min-height: 2.3em;
+  letter-spacing: 0.01em;
+  border: none;
+  background: #2c2c2d;
+  color: #c3c3c3;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13), 0 1.5px 4px rgba(0, 0, 0, 0.10);
+  cursor: pointer;
+  transition: background 0.2s cubic-bezier(.4, .09, .35, 1), color 0.2s, box-shadow .18s cubic-bezier(.4, .09, .35, 1);
+  user-select: none;
+  display: flex;
+  line-height: 1;
+  justify-content: center;
+  align-items: center;
+  height: 2rem;
+  text-decoration: none;
+  padding: 0 0.25rem;
+  margin: 0;
+  
+}
 </style>
 
 </head>
@@ -810,76 +806,83 @@ keyframes spin { 100% {
 
 	</div>
 	<div class="main-layout">
-  <!-- 左側主影片 -->
-  <div class="left-video" id="video-area">
-    <div class="canvas-area">
-      <div class="placeholder-container">
-        <span class="pen-icon" tabindex="0">
-          <svg height="150" viewBox="0 0 32 64" fill="none">
+		<!-- 左側主影片 -->
+		<div class="left-video" id="video-area">
+			<div class="canvas-area">
+				<div class="placeholder-container">
+					<span class="pen-icon" tabindex="0"> <svg height="150"
+							viewBox="0 0 32 64" fill="none">
             <rect class="pen-body" x="12" y="22" width="8" height="40" />
             <polygon class="pen-tip" points="12,20 20,20 16,10" />
           </svg>
-          <div class="color-picker">
-            <div class="color-option color-red" data-color="#ef4444"></div>
-            <div class="color-option color-yellow" data-color="#eab308"></div>
-            <div class="color-option color-blue" data-color="#3b82f6"></div>
-            <div class="color-option color-white selected" data-color="#c3c3c3"></div>
-          </div>
-        </span>
-
-        <span class="eraser-icon" tabindex="0">
-          <svg height="150" viewBox="0 0 32 64" fill="none">
+						<div class="color-picker">
+							<div class="color-option color-red" data-color="#ef4444"></div>
+							<div class="color-option color-yellow" data-color="#eab308"></div>
+							<div class="color-option color-blue" data-color="#3b82f6"></div>
+							<div class="color-option color-white selected"
+								data-color="#c3c3c3"></div>
+						</div>
+					</span> <span class="eraser-icon" tabindex="0"> <svg height="150"
+							viewBox="0 0 32 64" fill="none">
             <path class="eraser-head" d="M6 22a10 10 0 0 1 20 0Z" />
-            <rect class="eraser-body" x="6" y="26" width="20" height="30" rx="2" />
+            <rect class="eraser-body" x="6" y="26" width="20"
+								height="30" rx="2" />
           </svg>
-        </span>
+					</span> <span class="text-icon" tabindex="0">A</span>
 
-        <span class="text-icon" tabindex="0">A</span>
+					<button class="download-notes-btn" title="下載筆記">
+						<img
+							src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Download-icon.svg"
+							alt="下載筆記" width="24" height="24">
+					</button>
 
-        <button class="download-notes-btn" title="下載筆記">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Download-icon.svg" alt="下載筆記" width="24" height="24">
-        </button>
+					<div class="placeholder-container-blocker"></div>
+				</div>
+				<!-- end of .placeholder-container -->
 
-        <div class="placeholder-container-blocker"></div>
-      </div> <!-- end of .placeholder-container -->
+				<div class="canvas-container">
+					<canvas id="draw-canvas"></canvas>
+				</div>
 
-      <div class="canvas-container">
-        <canvas id="draw-canvas"></canvas>
-      </div>
+				<!-- 開始測驗按鈕區塊（獨立） -->
+				
+					<button id="start-quiz-btn" class="start-quiz-btn">開始測驗</button>
+				
 
-      <!-- 開始測驗按鈕區塊（獨立） -->
-      <div class="quiz-btn-container" style="text-align: center; margin-top: 12px;">
-        <button id="start-quiz-btn">開始測驗</button>
-      </div>
-    </div> <!-- end of .canvas-area -->
-  </div> <!-- end of .left-video -->
+			</div>
+			<!-- end of .canvas-area -->
+		</div>
+		<!-- end of .left-video -->
 
-  <!-- 右側大佔位div -->
-  <div class="right-side">
-    <div class="chat-container">
-      <div class="messages">
-        <!-- 假資料範例：後續可用 JavaScript 動態填充 -->
-      </div>
+		<!-- 右側大佔位div -->
+		<div class="right-side">
+			<div class="chat-container">
+				<div class="messages">
+					<!-- 假資料範例：後續可用 JavaScript 動態填充 -->
+				</div>
 
-      <div class="input-area">
-        <input type="text" id="gpt-input" placeholder="輸入訊息…" autocomplete="off" />
-        <button id="gpt-send-button" aria-label="Send">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            class="feather feather-send">
+				<div class="input-area">
+					<input type="text" id="gpt-input" placeholder="輸入訊息…"
+						autocomplete="off" />
+					<button id="gpt-send-button" aria-label="Send">
+						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+							viewBox="0 0 24 24" fill="none" stroke="currentColor"
+							stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+							class="feather feather-send">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
           </svg>
-        </button>
-      </div>
-    </div>
-  </div> <!-- end of .right-side -->
-</div> <!-- end of .main-layout -->
+					</button>
+				</div>
+			</div>
+		</div>
+		<!-- end of .right-side -->
+	</div>
+	<!-- end of .main-layout -->
 
-<footer class="footer">
-  <div class="footer-container">客服信箱</div>
-</footer>
+	<footer class="footer">
+		<div class="footer-container">客服信箱</div>
+	</footer>
 
 	<script>
         // 初始遮罩互動功能
