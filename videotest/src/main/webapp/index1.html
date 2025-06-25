@@ -869,7 +869,7 @@
                 </div>
                 <canvas id="draw-canvas"></canvas>
 
-                <button class="start-quiz-btn">開始測驗</button>
+                <button id="start-quiz-btn" class="start-quiz-btn">開始測驗</button>
             </div>
         </div>
         <!-- 右側大佔位div -->
@@ -932,6 +932,7 @@
             const url = youtubeLinkInput.value.trim();
             if (!url) return;
             const videoId = extractYouTubeId(url);
+            window.videoId = videoId;
             if (!videoId) {
                 alert('無效的 YouTube 連結，請再試一次！');
                 return;
@@ -1022,80 +1023,87 @@
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            // --- 元素與上下文 ---
-            const penIcon = document.querySelector('.pen-icon');
-            const penBody = penIcon.querySelector('.pen-body');
-            const penTip = penIcon.querySelector('.pen-tip');
-            const eraserIcon = document.querySelector('.eraser-icon');
-            const textIcon = document.querySelector('.text-icon');
-            const pictures = document.querySelectorAll('.placeholder-container img');
-            const canvasArea = document.querySelector('.canvas-area');
-            const canvas = document.getElementById('draw-canvas');
-            const ctx = canvas.getContext('2d');
-            const colorPicker = penIcon.querySelector('.color-picker');
-            const colorOptions = penIcon.querySelectorAll('.color-option');
-            let penColor = '#c3c3c3'; // 當前筆的顏色
-            let isDraggingColor = false; // 新增：是否正在拖動選擇顏色
-            let lastX = 0; // 新增：記錄上次的 X 座標
+        	  // --- 畫筆工具初始化 ---
+        	  const penIcon = document.querySelector('.pen-icon');
+        	  const penBody = penIcon.querySelector('.pen-body');
+        	  const penTip = penIcon.querySelector('.pen-tip');
+        	  const eraserIcon = document.querySelector('.eraser-icon');
+        	  const textIcon = document.querySelector('.text-icon');
+        	  const pictures = document.querySelectorAll('.placeholder-container img');
+        	  const canvasArea = document.querySelector('.canvas-area');
+        	  const canvas = document.getElementById('draw-canvas');
+        	  const ctx = canvas.getContext('2d');
+        	  const colorPicker = penIcon.querySelector('.color-picker');
+        	  const colorOptions = penIcon.querySelectorAll('.color-option');
+        	  const startQuizBtn = document.getElementById("start-quiz-btn");
 
-            // --- 狀態與常量 ---
-            const CENTER_X = 16;
-            const ERASER_WIDTH = 20;
-            let thickness = 8;
-            let isLocked = false;
-            let isEraser = false;
-            let isText = false;
-            let isDragging = false;
-            let lastY = 0;
-            let isDrawing = false;
-            let strokes = [];
-            let currentStroke = null;
-            let justFinishedText = false; // 防止連續開輸入框
+        	  // --- 畫筆狀態 ---
+        	  let penColor = '#c3c3c3';
+        	  let isDraggingColor = false;
+        	  let lastX = 0;
+        	  let lastY = 0;
+        	  let thickness = 8;
+        	  let isLocked = false;
+        	  let isEraser = false;
+        	  let isText = false;
+        	  let isDragging = false;
+        	  let isDrawing = false;
+        	  let strokes = [];
+        	  let currentStroke = null;
+        	  let justFinishedText = false;
+        	  const CENTER_X = 16;
+        	  const ERASER_WIDTH = 20;
 
+        	  // === 綁定：開始測驗按鈕 ===
+        	  if (startQuizBtn) {
+        	    startQuizBtn.addEventListener("click", function () {
+        	      if (!window.videoId) {
+        	        alert("請先載入影片！");
+        	        return;
+        	      }
+        	      const targetUrl = `quiz-setting.html?videoId=${encodeURIComponent(window.videoId)}`;
+        	      window.location.href = targetUrl;
+        	    });
+        	  } else {
+        	    console.warn("⚠️ 無法找到 start-quiz-btn，請檢查是否已載入 HTML 元素");
+        	  }
 
-            // --- 顏色選擇邏輯 ---
-            colorOptions.forEach(option => {
-                option.addEventListener('click', e => {
-                    e.stopPropagation();
+        	  // === 顏色選擇 ===
+        	  colorOptions.forEach(option => {
+        	    option.addEventListener('click', e => {
+        	      e.stopPropagation();
+        	      colorOptions.forEach(opt => opt.classList.remove('selected'));
+        	      option.classList.add('selected');
+        	      penColor = option.dataset.color;
+        	      updatePen(thickness);
+        	      setTimeout(() => {
+        	        colorPicker.classList.remove('show');
+        	      }, 200);
+        	    });
+        	  });
 
-                    // 移除其他選中狀態
-                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+        	  // 點擊畫面其他地方 → 關閉顏色選擇器
+        	  document.addEventListener('click', (e) => {
+        	    if (!colorPicker.contains(e.target) && !penIcon.contains(e.target)) {
+        	      colorPicker.classList.remove('show');
+        	    }
+        	  });
 
-                    // 設置當前選中（添加發光效果）
-                    option.classList.add('selected');
+        	  // 防止調色盤自己被點到關閉
+        	  colorPicker.addEventListener('click', (e) => {
+        	    e.stopPropagation();
+        	  });
 
-                    // 更新筆的顏色
-                    penColor = option.dataset.color;
-                    updatePen(thickness);
-
-                    // 短暫延遲後隱藏顏色選擇器，讓用戶看到選中效果
-                    setTimeout(() => {
-                        colorPicker.classList.remove('show');
-                    }, 200);
-                });
-            });
-
-            // 點擊調色盤外部時隱藏
-            document.addEventListener('click', (e) => {
-                if (!colorPicker.contains(e.target) && !penIcon.contains(e.target)) {
-                    colorPicker.classList.remove('show');
-                }
-            });
-
-            // 防止調色盤本身的點擊事件冒泡
-            colorPicker.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-            // --- 工具列行為 ---
-            function updatePen(w) {
-                const left = CENTER_X - w / 2, right = CENTER_X + w / 2;
-                penBody.setAttribute('width', w);
-                penBody.setAttribute('x', left);
-                penTip.setAttribute('points', `${left},20 ${right},20 ${CENTER_X},10`);
-                // 更新筆的顏色
-                penBody.style.fill = penColor;
-                penTip.style.fill = penColor;
-            }
+        	  // 畫筆粗細更新函式
+        	  function updatePen(w) {
+        	    const left = CENTER_X - w / 2;
+        	    const right = CENTER_X + w / 2;
+        	    penBody.setAttribute('width', w);
+        	    penBody.setAttribute('x', left);
+        	    penTip.setAttribute('points', `${left},20 ${right},20 ${CENTER_X},10`);
+        	    penBody.style.fill = penColor;
+        	    penTip.style.fill = penColor;
+        	  }
             function lockPen() {
                 isLocked = true; isEraser = false; isText = false;
                 penIcon.classList.add('locked', 'pen-glow');
@@ -1571,20 +1579,30 @@
         }
 
         function parseSingleSRT(srtText) {
-            const lines = srtText.trim().split("\n");
-            if (lines.length < 3) return null;
-            const timeMatch = lines[1].match(/(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s * (\d{ 2}: \d{ 2}: \d{ 2}, \d{ 3}) /);
-            if (!timeMatch) return null;
-            function toSeconds(t) {
-                const [h, m, s, ms] = t.split(/[:,]/);
-                return (+h) * 3600 + (+m) * 60 + (+s) + (+ms) / 1000;
-            }
-            return {
-                start: toSeconds(timeMatch[1]),
-                end: toSeconds(timeMatch[2]),
-                text: lines.slice(2).join("\n").trim()
-            };
-        }
+        	  const lines = srtText.trim().split("\n");
+        	  if (lines.length < 3) return null;
+
+        	  // 1. 修正正則：去掉多餘空白、把 {2} {3} 寫正
+        	  const timeMatch = lines[1].match(
+        	    /(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/
+        	  );
+        	  if (!timeMatch) return null;
+
+        	  // 2. 抽出 start/end
+        	  const [, startStr, endStr] = timeMatch;
+        	  function toSeconds(t) {
+        	    const [h, m, s, ms] = t.split(/[:,]/);
+        	    return +h * 3600 + +m * 60 + +s + +ms / 1000;
+        	  }
+
+        	  // 3. 回傳真正的 subtitle 物件
+        	  return {
+        	    start: toSeconds(startStr),
+        	    end:   toSeconds(endStr),
+        	    text:  lines.slice(2).join("\n").trim()
+        	  };
+        	}
+
 
 
         // 載入 YouTube 影片
@@ -1648,6 +1666,15 @@
                 requestAnimationFrame(updateSubtitle);
             }
         }
+        document.getElementById("start-quiz-btn").addEventListener("click", function () {
+            if (!window.videoId) {
+              alert("請先載入影片！");
+              return;
+            }
+
+            const targetUrl = `quiz-setting.html?videoId=${encodeURIComponent(window.videoId)}`;
+            window.location.href = targetUrl;
+          });
 
 
     </script>
