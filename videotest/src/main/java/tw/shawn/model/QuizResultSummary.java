@@ -1,14 +1,19 @@
 package tw.shawn.model;
 
+/**
+ * ✅ QuizResultSummary：封裝某部影片的測驗統計總結資訊
+ * 通常用於顯示「某影片累積測驗的答對情形」，對應前端 quiz summary 頁面使用
+ */
 public class QuizResultSummary {
-    private String videoId;
-    private String videoTitle;     // ✅ 新增欄位：影片名稱
-    private String source;
-    private int totalQuizCount;
-    private int total;
-    private int correct;
 
-    // 建構子（保留原來）
+    private String videoId;          // ✅ 影片 ID（資料表 video 的主鍵）
+    private String videoTitle;      // ✅ 影片標題（額外補充欄位，用於顯示用）
+    private String source;          // ✅ 題目來源（如 GPT、自動產生、本地題庫）
+    private int totalQuizCount;     // ✅ 該來源下總共測驗幾次
+    private int total;              // ✅ 該來源下總共做過幾題
+    private int correct;            // ✅ 總共答對幾題
+
+    // ✅ 建構子（用於查詢結果封裝）
     public QuizResultSummary(String videoId, String source, int totalQuizCount, int total, int correct) {
         this.videoId = videoId;
         this.source = source;
@@ -17,10 +22,10 @@ public class QuizResultSummary {
         this.correct = correct;
     }
 
-    // ✅ 若你 DAO 是使用無參構造 + setter，也可保留這個空建構子
+    // ✅ 無參數建構子（保留給 Spring JDBC 或 Gson 用）
     public QuizResultSummary() {}
 
-    // === Getter / Setter ===
+    // --- 以下為標準 Getter / Setter 方法 ---
 
     public String getVideoId() {
         return videoId;

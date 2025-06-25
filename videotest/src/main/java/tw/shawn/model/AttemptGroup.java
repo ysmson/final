@@ -4,20 +4,27 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * AttemptGroup：表示一次測驗紀錄（同一組 attemptId 對應的多題作答）
+ * ✅ AttemptGroup：表示「一次測驗紀錄」
+ *
+ * 此類別代表同一個 `attemptId` 的作答紀錄集合，
+ * 對應一次完整的作答行為，會包含：
+ *   - 所有題目詳解（AnswerRecord 列表）
+ *   - 提交時間、來源、正確率等統計資訊
+ *
+ * 📌 用於 quizHistory 詳解頁（例如 quizhistory.html）或結果統計後端 API。
  */
 public class AttemptGroup {
 
-    private long attemptId; // 測驗批次編號
-    private LocalDateTime submittedAt; // 提交時間
-    private String source; // 題目來源：GPT 或 local
-    private int total;     // 題目總數
-    private int correct;   // 答對題數
-    private double accuracy; // 正確率
+    private long attemptId;                // 🧾 測驗批次編號（唯一值，每次作答自動產生）
+    private LocalDateTime submittedAt;    // 🕒 本次測驗提交時間
+    private String source;                // 🧠 題目來源（GPT 或 local）
+    private int total;                    // 🧮 題目總數
+    private int correct;                  // ✅ 答對題數
+    private double accuracy;              // 📊 正確率（例：0.6 表示 60%）
 
-    private List<AnswerRecord> questions; // 本次所有題目與作答詳解
+    private List<AnswerRecord> questions; // 📋 本次作答的所有題目詳解
 
-    // --- Getter / Setter ---
+    // --- Getter / Setter 區 ---
 
     public long getAttemptId() {
         return attemptId;

@@ -12,21 +12,24 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 import java.util.List;
 
-@Repository
+@Repository // 將此類標記為 Spring 管理的 DAO 元件
 public class QuizDAO {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
     /**
-     * ✅ 寫入單筆題目，並回傳資料庫自動產生的 quiz_id
+     * ✅ 寫入單筆 quiz 題目，並回傳資料庫自動產生的 quiz_id
+     * 用於儲存單一 GPT 題目或本地題目到 quiz 表
      */
     public int insertQuiz(Quiz quiz) {
         String sql = "INSERT INTO quiz (video_id, question, option1, option2, option3, option4, correct_index, explanation, source, difficulty) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+        // 建立 keyHolder 以接收自動產生的 quiz_id（PK）
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
+        // 使用 PreparedStatement 手動綁定每個欄位值
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, quiz.getVideoId());
@@ -42,11 +45,12 @@ public class QuizDAO {
             return ps;
         }, keyHolder);
 
+        // 取得自動產生的主鍵值（quiz_id）
         return keyHolder.getKey().intValue();
     }
 
     /**
-     * ✅ 根據影片 ID 與題目來源載入題庫（限制筆數）
+     * ✅ 根據影片 ID、題目來源查詢題庫，最多回傳 limit 筆（順序由 quiz_id 決定）
      */
     public List<Quiz> getQuizzesByVideoIdAndSource(String videoId, String source, int limit) {
         String sql = "SELECT * FROM quiz WHERE video_id = ? AND source = ? ORDER BY quiz_id LIMIT ?";
@@ -54,7 +58,7 @@ public class QuizDAO {
     }
 
     /**
-     * ✅ 額外補充：查詢最新的 GPT 題目（如果未來想用）
+     * ✅ 額外補充：依 quiz_id 倒序，查詢最新的題目清單（適合查看 GPT 最近產生的）
      */
     public List<Quiz> getLatestQuizzesByVideoAndSource(String videoId, String source, int limit) {
         String sql = "SELECT * FROM quiz WHERE video_id = ? AND source = ? ORDER BY quiz_id DESC LIMIT ?";
@@ -62,7 +66,8 @@ public class QuizDAO {
     }
 
     /**
-     * ✅ 將 ResultSet 映射為 Quiz 物件
+     * ✅ 將一筆資料從 ResultSet 映射成 Quiz Java 物件
+     * 每次查詢 quiz 表都會用到這個 mapper
      */
     private Quiz mapRowToQuiz(ResultSet rs, int rowNum) {
         try {
@@ -84,9 +89,19 @@ public class QuizDAO {
             return null;
         }
     }
+
+    /**
+     * ✅ 寫入 quiz 清單，並避免重複（以 videoId + question 判斷是否已存在）
+     * 適合批次匯入自動產生題目時使用
+     * @return 實際寫入成功的題目數量
+     */
     public int insertQuizListAvoidDuplicate(String videoId, List<Quiz> quizList, String source) {
         int insertCount = 0;
+
+        // 判斷是否已存在該題（以 question + videoId 為條件）
         String checkSql = "SELECT COUNT(*) FROM quiz WHERE video_id = ? AND question = ?";
+
+        // 若不存在，再進行寫入
         String insertSql = """
             INSERT INTO quiz (video_id, question, option1, option2, option3, option4,
                               correct_index, explanation, source, difficulty)
@@ -104,8 +119,14 @@ public class QuizDAO {
                 insertCount++;
             }
         }
+
         return insertCount;
     }
+
+    /**
+     * ✅ 查詢題庫：依據影片、來源與難度，限制回傳題目筆數
+     * 用於支援「難度篩選」功能的載題
+     */
     public List<Quiz> getQuizzesByVideoSourceDifficulty(String videoId, String source, String difficulty, int limit) {
         String sql = """
             SELECT * FROM quiz

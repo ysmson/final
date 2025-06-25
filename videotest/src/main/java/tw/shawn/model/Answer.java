@@ -4,33 +4,39 @@ import java.util.Date;
 
 /**
  * Answer：使用者作答紀錄的資料模型（非 JPA）
+ * 對應資料表欄位，包括 quizId、使用者選擇的選項、是否答對、來源、解析等。
  */
 public class Answer {
-    private Integer id;
-    private Integer userId;
-    private Integer quizId;
-    private Integer selectedOption;
-    private Boolean isCorrect;
-    private String source;
-    private String question;
-    private String option1;
-    private String option2;
-    private String option3;
-    private String option4;
-    private String videoId;
-    private String answerText;       // 真實欄位名稱
-    private Integer answerIndex;
-    private String explanation;
-    private Long attemptId;
-    private Date createdAt;
-    private Date answeredAt;
-    private Date submittedAt;
+
+    // ========== 基本欄位 ==========
+    private Integer id;                 // 作答記錄主鍵 ID
+    private Integer userId;            // 使用者 ID（外鍵）
+    private Integer quizId;            // 對應的 quiz 題目 ID（外鍵）
+    private Integer selectedOption;    // 使用者選擇的選項索引（0~3）
+    private Boolean isCorrect;         // 是否答對
+    private String source;             // 題目來源（如 gpt/local）
+    private String question;           // 題目文字
+    private String option1;            // 選項 A
+    private String option2;            // 選項 B
+    private String option3;            // 選項 C
+    private String option4;            // 選項 D
+    private String videoId;            // 所屬影片 ID
+    private String answerText;         // 正確答案的文字
+    private Integer answerIndex;       // 正確答案的索引（0~3）
+    private String explanation;        // 該題解析說明
+    private Long attemptId;            // 作答批次 ID（一次測驗共用）
+    private Date createdAt;            // 資料建立時間
+    private Date answeredAt;           // 使用者作答時間
+    private Date submittedAt;          // 提交整份測驗的時間
+
+    // 難度（如 easy / medium / hard）
+    private String difficulty;
 
     public Answer() {
-        // 無參數建構子
+        // 無參數建構子（必要）
     }
 
-    // Getter / Setter
+    // ========== Getter / Setter 區 ==========
 
     public Integer getId() {
         return id;
@@ -136,7 +142,10 @@ public class Answer {
         this.answerText = answerText;
     }
 
-    // 新增 getAnswer()、setAnswer() 方便兼容
+    /**
+     * 🔁 兼容方法：getAnswer() 實際等同於 getAnswerText()
+     * 方便其他程式碼中用 answer 來取代 answerText
+     */
     public String getAnswer() {
         return answerText;
     }
@@ -193,10 +202,13 @@ public class Answer {
         this.submittedAt = submittedAt;
     }
 
+    // ========== 額外輔助方法區 ==========
+
     /**
-     * 根據選項索引取得對應的選項文字
-     * @param index 0-based (0~3)
-     * @return 選項文字或 null
+     * 根據 index 取得對應選項文字（0=A、1=B、2=C、3=D）
+     *
+     * @param index 選項索引值
+     * @return 該選項的文字，若無對應則回傳 null
      */
     public String getOptionTextByIndex(Integer index) {
         if (index == null) return null;
@@ -208,8 +220,9 @@ public class Answer {
             default: return null;
         }
     }
-    private String difficulty;
 
+    // ========== 難度相關 ==========
+    
     public String getDifficulty() {
         return difficulty;
     }
@@ -217,6 +230,12 @@ public class Answer {
     public void setDifficulty(String difficulty) {
         this.difficulty = difficulty;
     }
+
+    /**
+     * 將內部難度英文代碼轉換為中文標籤
+     *
+     * @return 中文難度名稱（簡單 / 中等 / 困難）
+     */
     public String getDifficultyLabel() {
         if (difficulty == null) return "未分類";
         switch (difficulty.toLowerCase()) {
@@ -226,13 +245,19 @@ public class Answer {
             default: return difficulty;
         }
     }
+
+    /**
+     * 根據難度回傳對應顏色（用於前端顯示）
+     *
+     * @return 難度對應的 HEX 顏色碼
+     */
     public String getDifficultyColor() {
         if (difficulty == null) return "#999";
         switch (difficulty.toLowerCase()) {
-            case "easy": return "#4caf50";   // 綠
-            case "medium": return "#ff9800"; // 橙
-            case "hard": return "#f44336";   // 紅
-            default: return "#999";          // 灰
+            case "easy": return "#4caf50";   // 綠色
+            case "medium": return "#ff9800"; // 橙色
+            case "hard": return "#f44336";   // 紅色
+            default: return "#999";          // 灰色（未知）
         }
     }
 

@@ -3,40 +3,61 @@ package tw.shawn.model;
 import jakarta.persistence.*;
 import java.util.List;
 
+/**
+ * ✅ Quiz：選擇題的資料模型，對應資料表 quiz
+ *
+ * 代表單一題目（與某部影片 videoId 關聯）
+ * 包含題目、4 個選項、正確答案索引、解析、來源等資訊
+ */
 @Entity
 @Table(name = "quiz")
 public class Quiz {
 
+    // ✅ 主鍵欄位，自動編號（對應 quiz_id）
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "quiz_id")
     private int id;
 
+    // ✅ 關聯的影片 ID（FK 對應 video 表的 video_id）
     @Column(name = "video_id")
     private String videoId;
 
+    // ✅ 題目內容
     private String question;
+
+    // ✅ 四個選項（必備）
     private String option1;
     private String option2;
     private String option3;
     private String option4;
 
+    // ✅ 正確答案的索引值（0~3）
     @Column(name = "correct_index")
     private int correctIndex;
 
-    // ✅ 新增正確答案選項文字與 ABC 標示
+    // ✅ 非資料庫欄位，用來傳送正確答案文字（如：「甲是對的」）
     @Transient
-    private String correctAnswer; // 如：「甲是對的」
-    
-    @Transient
-    private String correctOption; // 如：「A」
+    private String correctAnswer;
 
+    // ✅ 非資料庫欄位，用來傳送正確選項代號（如：「A」）
+    @Transient
+    private String correctOption;
+
+    // ✅ 該題的解析說明（例如為何選這一題）
     private String explanation;
+
+    // ✅ 題目來源（local / GPT）
     private String source;
 
+    // ✅ 題目難易度（easy / medium / hard）
+    @Column(name = "difficulty")
+    private String difficulty;
+
+    // ✅ 無參數建構子（JPA 必備）
     public Quiz() {}
 
-    // --- Getter / Setter ---
+    // --- 以下為標準 Getter / Setter 區域 ---
 
     public int getId() {
         return id;
@@ -134,7 +155,15 @@ public class Quiz {
         this.source = source;
     }
 
-    // ✅ 支援 setOptions 方法
+    public String getDifficulty() {
+        return difficulty;
+    }
+
+    public void setDifficulty(String difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    // ✅ 提供以 List 傳入選項的 setter（通常用於自動產題時）
     public void setOptions(List<String> options) {
         if (options != null && options.size() >= 4) {
             this.option1 = options.get(0);
@@ -144,19 +173,8 @@ public class Quiz {
         }
     }
 
-    // ✅ 取得所有選項作為 List
+    // ✅ 將四個選項包成 List 回傳（用於迴圈顯示等用途）
     public List<String> getOptions() {
         return List.of(option1, option2, option3, option4);
     }
-    @Column(name = "difficulty")
-    private String difficulty;
-
-    public String getDifficulty() {
-        return difficulty;
-    }
-
-    public void setDifficulty(String difficulty) {
-        this.difficulty = difficulty;
-    }
-
 }

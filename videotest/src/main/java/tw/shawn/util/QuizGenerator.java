@@ -1,92 +1,95 @@
 package tw.shawn.util;
 
 import tw.shawn.model.Quiz;
-
 import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * QuizGenerator：從字幕內容產生選擇題（非 GPT），使用關鍵字取代方式製造干擾選項。
+ * ✅ QuizGenerator：從影片字幕文字自動產生選擇題（非 GPT），
+ * 利用關鍵字替換方式產生干擾選項，模擬出選擇題結構。
  */
 public class QuizGenerator {
 
     /**
-     * ✅ 根據字幕文字自動產生多題選擇題
-     * @param transcript 字幕內容（純文字、已斷句）
-     * @param videoId 影片 ID（會轉成字串存入 Quiz 的 videoId 欄位）
-     * @param num 要產生的題目數量（例如：5 題）
-     * @return List<Quiz> 回傳選擇題列表
+     * ✅ 從字幕內容中產生指定數量的選擇題
+     *
+     * @param transcript 字幕內容（文字已斷句，例如抓自 YouTube 字幕）
+     * @param videoId 對應影片的 ID（會轉成字串存入 Quiz 中）
+     * @param num 產生題目的數量（例如：5 題）
+     * @return 回傳包含 Quiz 題目的 List
      */
     public static List<Quiz> generateMultipleChoice(String transcript, int videoId, int num) {
-        List<Quiz> result = new ArrayList<>();             // 最終回傳的題目清單
-        Set<String> usedSentences = new HashSet<>();       // 記錄已出過的正確句子，避免重複出題
+        List<Quiz> result = new ArrayList<>();             // ✅ 最終回傳的題目列表
+        Set<String> usedSentences = new HashSet<>();       // ✅ 已用過的正確句子，避免重複出題
 
-        // ✅ 用中文標點符號（。！？）切割成句子
+        // ✅ 先依照中文的句號/驚嘆號/問號斷句
         String[] sentences = transcript.split("[。！？]");
 
         List<String> candidates = new ArrayList<>();
         for (String s : sentences) {
             s = s.trim(); // 去除前後空白
-            // 條件：句子長度需 > 20 且含有中文
+            // 條件：句子長度 > 20 且包含中文字元
             if (s.length() > 20 && Pattern.compile("[\u4e00-\u9fa5]").matcher(s).find()) {
-                candidates.add(s); // 加入候選句子列表
+                candidates.add(s); // 加入候選清單
             }
         }
 
         Random random = new Random();
-        int attempts = 0; // 控制最多重試次數（避免無限迴圈）
+        int attempts = 0; // 最多嘗試 100 次，避免死循環
 
-        // ✅ 重複嘗試最多 100 次，直到產生指定題數
+        // ✅ 進入出題迴圈，直到達到 num 題或超過嘗試次數限制
         while (result.size() < num && attempts++ < 100) {
-            if (candidates.isEmpty()) break; // 若沒候選句可用則停止
+            if (candidates.isEmpty()) break;
 
-            // 隨機選一句當作正確答案
+            // 隨機選一個句子當作正解
             String correct = candidates.get(random.nextInt(candidates.size()));
-            if (usedSentences.contains(correct)) continue; // 若已出題過則略過
+            if (usedSentences.contains(correct)) continue; // 避免重複出題
 
-            // ✅ 製造干擾選項：替換特定關鍵詞（根據 Java 主題常見混淆概念）
+            // ✅ 製造錯誤選項（干擾選項）：替換 Java 主題中的關鍵詞
             String fake1 = correct.replaceFirst("Java", "Python");
             String fake2 = correct.replaceFirst("JDK", "JRE");
             String fake3 = correct.replaceFirst("VS ?Code", "Notepad");
 
-            // ✅ 建立選項集合，避免重複選項
+            // ✅ 利用 Set 確保所有選項唯一
             Set<String> optionsSet = new LinkedHashSet<>(Arrays.asList(correct, fake1, fake2, fake3));
-            if (optionsSet.size() < 4) continue; // 若無法組成 4 個不同選項則跳過
+            if (optionsSet.size() < 4) continue; // 若選項不夠 4 個不同則略過
 
+            // ✅ 洗牌選項順序
             List<String> options = new ArrayList<>(optionsSet);
-            Collections.shuffle(options); // 將選項順序打亂
+            Collections.shuffle(options);
 
-            int correctIndex = options.indexOf(correct); // 找出正確答案在選項中的位置
-            if (correctIndex == -1) continue; // 若找不到則跳過該題
+            int correctIndex = options.indexOf(correct);
+            if (correctIndex == -1) continue;
 
-            // ✅ 建立 Quiz 物件並填入題目資料
+            // ✅ 建立 Quiz 題目物件
             Quiz quiz = new Quiz();
-            quiz.setVideoId(String.valueOf(videoId)); // videoId 要轉為字串
-            quiz.setQuestion("下列哪一項敘述正確？"); // 固定題幹
+            quiz.setVideoId(String.valueOf(videoId));
+            quiz.setQuestion("下列哪一項敘述正確？"); // 固定題目
 
-            // 設定四個選項
+            // 設定選項（注意 index 對應）
             quiz.setOption1(options.get(0));
             quiz.setOption2(options.get(1));
             quiz.setOption3(options.get(2));
             quiz.setOption4(options.get(3));
 
-            quiz.setCorrectIndex(correctIndex + 1); // 正解索引（1-based）
-            quiz.setExplanation("根據影片內容，正確敘述為：「" + correct + "」"); // 題目解釋
+            quiz.setCorrectIndex(correctIndex + 1); // ✔️ 資料庫使用 1-based（1 ~ 4）
+            quiz.setExplanation("根據影片內容，正確敘述為：「" + correct + "」");
 
-            result.add(quiz); // 將此題加入結果列表
-            usedSentences.add(correct); // 標記此句已使用
+            result.add(quiz);               // 加入結果
+            usedSentences.add(correct);     // 標記此句已使用
         }
 
-        return result; // 回傳產生好的題目清單
+        return result;
     }
 
     /**
-     * ✅ 快速方法：預設產生 5 題題目
-     * @param transcript 字幕內容
-     * @param videoId 對應的影片 ID
-     * @return 題目列表（最多 5 題）
+     * ✅ 提供簡易使用版本（預設產生 5 題）
+     *
+     * @param transcript 字幕文字
+     * @param videoId 對應影片 ID
+     * @return 回傳 5 題選擇題
      */
     public static List<Quiz> generateFromText(String transcript, int videoId) {
-        return generateMultipleChoice(transcript, videoId, 5); // 呼叫主要方法
+        return generateMultipleChoice(transcript, videoId, 5);
     }
 }

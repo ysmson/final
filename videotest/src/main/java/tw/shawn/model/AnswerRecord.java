@@ -1,25 +1,37 @@
 package tw.shawn.model;
 
 /**
- * AnswerRecord：用於顯示每一題作答詳情（含原題目、選項、正解、使用者選擇）
+ * ✅ AnswerRecord：用於顯示「每一題作答詳解」的資料模型
+ *
+ * 此類別主要是回傳單題的詳解資訊給前端，
+ * 包含：題目內容、四個選項、正確答案索引與文字、使用者的選擇索引、解析等等。
+ *
+ * ⚙️ 常見用途：
+ * - 測驗結果頁（result.html）
+ * - 錯題回顧頁（quizhistory.html）
+ * - 依作答 attemptId 整批回傳
  */
 public class AnswerRecord {
-    private Integer quizId;
-    private Integer selectedIndex;
-    private Integer answerIndex; // 正確答案索引
-    private String question;
-    private String option1;
-    private String option2;
-    private String option3;
-    private String option4;
-    private String source;   // 題目來源 GPT / local
-    private String answer;   // 正確答案文字
-    private String explanation;
 
-    private Long attemptId;  // 作答批次
-    private String videoId;  // 影片 ID
+    private Integer quizId;          // 🆔 題目 ID（quiz 資料表的主鍵）
+    private Integer selectedIndex;   // ❌ 使用者所選擇的選項索引（0~3）
+    private Integer answerIndex;     // ✅ 正確答案的選項索引（0~3）
+
+    private String question;         // ❓ 題目內容
+    private String option1;          // 選項 A
+    private String option2;          // 選項 B
+    private String option3;          // 選項 C
+    private String option4;          // 選項 D
+
+    private String source;           // 🧠 題目來源（如 GPT 或 local）
+    private String answer;           // ✅ 正確答案的選項文字（例如 "影片中提到..."）
+    private String explanation;      // 📘 題目解析說明
+
+    private Long attemptId;          // 🧾 所屬作答批次 ID（用來分群）
+    private String videoId;          // 🎬 對應影片 ID
 
     // --- Getter / Setter ---
+
     public Integer getQuizId() {
         return quizId;
     }

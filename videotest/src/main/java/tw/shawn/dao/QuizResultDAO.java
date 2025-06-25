@@ -10,14 +10,15 @@ import tw.shawn.model.QuizResultSummary;
 import java.sql.ResultSet;
 import java.util.List;
 
-@Repository
+@Repository // 告訴 Spring 這是資料庫存取元件（DAO）
 public class QuizResultDAO {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
     /**
-     * 儲存一次測驗結果（含 difficulty）
+     * ✅ 儲存一次完整的測驗結果（寫入 quiz_results 表）
+     * 含答對題數、總題數、來源、影片 ID、使用者 ID、難度等
      */
     public void insertQuizResult(int userId, String videoId, int correctCount, int totalCount, String source, long attemptId, String difficulty) {
         String sql = """
@@ -29,7 +30,7 @@ public class QuizResultDAO {
     }
 
     /**
-     * 查詢最新一次測驗結果（單一影片）
+     * ✅ 查詢某位使用者針對某部影片「最近一次」的測驗結果（依時間排序）
      */
     public QuizResult getLatestQuizResult(int userId, String videoId) {
         String sql = "SELECT * FROM quiz_results WHERE user_id = ? AND video_id = ? ORDER BY submitted_at DESC LIMIT 1";
@@ -38,19 +39,24 @@ public class QuizResultDAO {
     }
 
     /**
-     * 查詢某使用者所有測驗紀錄
+     * ✅ 查詢使用者所有測驗結果（最新的排在最前面）
      */
     public List<QuizResult> getAllResultsByUser(int userId) {
         String sql = "SELECT * FROM quiz_results WHERE user_id = ? ORDER BY submitted_at DESC";
         return jdbcTemplate.query(sql, new Object[]{userId}, quizResultMapper);
     }
 
+    /**
+     * ✅ 同上，只是方法名稱不同（做法一樣）
+     */
     public List<QuizResult> getResultsByUser(int userId) {
         return getAllResultsByUser(userId);
     }
 
     /**
-     * 依影片統計測驗總數與答對數（影片標題＋來源）
+     * ✅ 依影片統計測驗紀錄（總次數、總題數、正確數）
+     * 若同一影片含多種來源（gpt, local），則會標示為「混合」
+     * 用於 quizSummary 頁面顯示每部影片的整體表現
      */
     public List<QuizResultSummary> getQuizSummaryByUser(int userId) {
         String sql = """
@@ -73,8 +79,12 @@ public class QuizResultDAO {
         return jdbcTemplate.query(sql, new Object[]{userId}, quizResultSummaryMapper);
     }
 
-    // ----------- Mapper 區 -----------
+    // ----------------- RowMapper 區 -----------------
 
+    /**
+     * ✅ 將 quiz_results 表轉換成 QuizResult 物件
+     * 用於顯示每次測驗的詳細資料
+     */
     private final RowMapper<QuizResult> quizResultMapper = (rs, rowNum) -> {
         QuizResult result = new QuizResult();
         result.setUserId(rs.getInt("user_id"));
@@ -84,10 +94,13 @@ public class QuizResultDAO {
         result.setSubmittedAt(rs.getTimestamp("submitted_at").toLocalDateTime());
         result.setSource(rs.getString("source"));
         result.setAttemptId(rs.getLong("attempt_id"));
-        
         return result;
     };
 
+    /**
+     * ✅ 將 quiz 統計結果轉成 QuizResultSummary 物件
+     * 用於影片總結分析區塊的資料呈現
+     */
     private final RowMapper<QuizResultSummary> quizResultSummaryMapper = (rs, rowNum) -> {
         QuizResultSummary summary = new QuizResultSummary();
         summary.setVideoId(rs.getString("video_id"));
@@ -100,7 +113,8 @@ public class QuizResultDAO {
     };
 
     /**
-     * 統計某次測驗的總題數（answer 表）
+     * ✅ 統計使用者對某影片某來源的總作答數（answer 表）
+     * 用於 accuracy 百分比計算
      */
     public int sumTotalQuestions(int userId, String videoId, String source) {
         String sql = """
@@ -111,7 +125,7 @@ public class QuizResultDAO {
     }
 
     /**
-     * 統計某次測驗的答對題數（answer 表）
+     * ✅ 統計使用者對某影片某來源的正確作答數（answer 表）
      */
     public int sumCorrectAnswers(int userId, String videoId, String source) {
         String sql = """
